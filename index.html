@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>动态填充demo</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<script src="https://cdn.staticfile.org/jquery/3.3.1/jquery.js"></script>
+		<style type="text/css">
+			body {
+				background-color: #bba47e;
+			}
+			
+			div.container {
+				
+				width: 60%;
+				margin: auto;
+				
+				color: black;
+			}
+			
+			button {
+				position: fixed;
+				top: 100px;
+				left: 100px;
+				
+				border-radius: 6px;
+				padding: 4px;
+				
+				outline-style: none;
+				background-color: #ffad83;
+				
+				transition-duration: 1s;
+			}
+			
+			ul {
+				list-style: none;
+			}
+			
+			li {
+				padding: 10px;
+				margin-bottom: 20px;
+				border-radius: 8px;
+				
+				background-color: white;
+			}
+
+		</style>
+
+	</head>
+
+	<body>
+		<button id="but">显示首页</button>
+
+		<div class="container">
+			<ul id="list_box">
+				<script type="text/template" data-id="list_tpl">
+					<li class="list_item">
+						<h3>$title$</h3>
+						<p>$content$</p>
+					</li>
+				</script>
+			</ul>
+		</div>
+
+		
+		<script type="text/javascript">
+
+			 // 在String原型链中添加一个方法来填充模板
+			String.prototype.tmp = function(obj) {
+				return this.replace(/\$\w+\$/g,function(matchs) {
+					var returns = obj[matchs.replace(/\$/g,"")];
+					return (returns + "") == 'undefined' ? '' : returns;
+				});
+			}
+			
+			// 点击首页进行首次填充 
+			document.getElementById('but').addEventListener('click',function() {
+				this.style.display = 'none';
+				var XMLHttp = new XMLHttpRequest();
+				XMLHttp.onreadystatechange = function() {
+				if(this.readyState == 4 && this.status ==200) {
+					var obj = JSON.parse(this.responseText);
+					var htmlList = '',
+					// htmlTemp = $("#list_box script[data-id='list_tpl']").html();
+					htmlTemp = document.querySelector("#list_box script[data-id='list_tpl']").innerHTML;
+					// 根据response中的数据，逐个填充 
+					obj.data.forEach(function(object) {
+						htmlList += htmlTemp.tmp(object);
+					});
+					
+					// $("#list_box").append(htmlList);
+					document.getElementById("list_box").insertAdjacentHTML('beforeend',htmlList);
+					
+				}
+			}
+			
+			XMLHttp.open("GET","json/index.json",true);
+			XMLHttp.send();
+			});
+			
+				/* 利用函数的闭包 */
+			(function() {
+			/* 防止滑动条接近底部时重复发送请求 */
+			var i = 1;
+
+			function fu() {
+				var regin = function() {
+					i = 1;
+				}
+				/* 滚动条滚动的高度 */
+				var scroll = document.documentElement.scrollTop;
+				/* 内容的总高度 */
+				var bodyHeight = document.body.scrollHeight;
+				/* 浏览器窗口的高度 */
+				var visHeight = document.documentElement.clientHeight;
+
+				if((scroll + visHeight >= bodyHeight) && i === 1) {
+					i = 0;
+					
+				//滑动条滚动到底部时发送Ajax请求并进行填充 
+					var XMLHttp = new XMLHttpRequest();
+					XMLHttp.onreadystatechange = function() {
+					if(this.readyState == 4 && this.status ==200) {
+						var obj = JSON.parse(this.responseText);
+						var htmlList = '',
+						// htmlTemp = $("#list_box script[data-id='list_tpl']").html();
+						htmlTemp = document.querySelector("#list_box script[data-id='list_tpl']").innerHTML;
+						obj.data.forEach(function(object) {
+							htmlList += htmlTemp.tmp(object);
+						});
+						
+						
+						// $("#list_box").append(htmlList);
+						document.getElementById("list_box").insertAdjacentHTML('beforeend',htmlList);
+						
+					}
+				}
+					
+					XMLHttp.open("GET","json/index.json",true);
+					XMLHttp.send();
+					
+					
+					/* 来一次中断之后，再重新恢复 i 的值 */
+					setTimeout(regin,2000);
+				};
+			}
+
+			document.addEventListener('scroll',fu);
+			})()
+			
+		</script>
+	</body>
+</html>
