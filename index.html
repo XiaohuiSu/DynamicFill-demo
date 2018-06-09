@@ -4,7 +4,6 @@
 		<meta charset="utf-8" />
 		<title>动态填充demo</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<script src="https://cdn.staticfile.org/jquery/3.3.1/jquery.js"></script>
 		<style type="text/css">
 			body {
 				background-color: #bba47e;
@@ -98,15 +97,8 @@
 			XMLHttp.send();
 			});
 			
-				/* 利用函数的闭包 */
-			(function() {
-			/* 防止滑动条接近底部时重复发送请求 */
-			var i = 1;
-
-			function fu() {
-				var regin = function() {
-					i = 1;
-				}
+			
+			function func() {
 				/* 滚动条滚动的高度 */
 				var scroll = document.documentElement.scrollTop;
 				/* 内容的总高度 */
@@ -114,9 +106,7 @@
 				/* 浏览器窗口的高度 */
 				var visHeight = document.documentElement.clientHeight;
 
-				if((scroll + visHeight >= bodyHeight) && i === 1) {
-					i = 0;
-					
+				if((scroll + visHeight >= bodyHeight)) {
 				//滑动条滚动到底部时发送Ajax请求并进行填充 
 					var XMLHttp = new XMLHttpRequest();
 					XMLHttp.onreadystatechange = function() {
@@ -138,16 +128,18 @@
 					
 					XMLHttp.open("GET","json/index.json",true);
 					XMLHttp.send();
-					
-					
-					/* 来一次中断之后，再重新恢复 i 的值 */
-					setTimeout(regin,2000);
-				};
-			}
-
-			document.addEventListener('scroll',fu);
-			})()
+			} }
 			
+			// 利用函数闭包和函数去抖，所以scroll绑定的函数体只是在最后滑动条滑到底部时触发
+			var debounce = function(fun) {
+				let t;
+				return function() {
+					clearTimeout(t);
+					t = setTimeout(fun,1000);
+				}
+			}
+			document.addEventListener('scroll',debounce(func));
+
 		</script>
 	</body>
 </html>
